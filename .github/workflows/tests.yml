@@ -1,14 +1,15 @@
-name: Go Tests
+name: Go
 
-on:
-  push:
-    branches: [main, diploma-submission]
-  pull_request:
-    branches: [main, diploma-submission]
+on: [push]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [1.24.x]
+  
     steps:
     - uses: actions/checkout@v4
 
@@ -16,12 +17,15 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24.x'
-
+        
     - name: Display Go version
       run: go version
 
     - name: Install dependencies
       run: go mod tidy
 
-    - name: Run unit tests
-      run: go test ./pkg/... -v -timeout=30s
+    - name: Run local server
+      run: |
+        go run main.go &
+        sleep 100
+        go test -run ^TestApp$ ./tests
