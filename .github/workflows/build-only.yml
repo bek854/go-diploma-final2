@@ -2,9 +2,9 @@ name: Go Build Only
 
 on:
   push:
-    branches: [ diploma-submission ]
+    branches: [main, diploma-submission]
   pull_request:
-    branches: [ main ]
+    branches: [main, diploma-submission]
 
 jobs:
   build:
