@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1",
+    "date": "20260921",
+    "title": "вапр",
+    "comment": "ыыв",
+    "repeat": "y"
+  },
+  {
+    "id": "2",
+    "date": "20250920",
+    "title": "Test task from PowerShell",
+    "comment": "",
+    "repeat": ""
+  },
+  {
+    "id": "3",
+    "date": "20250921",
+    "title": "Test task",
+    "comment": "test comment",
+    "repeat": "d 1"
+  },
+  {
+    "id": "4",
+    "date": "20250920",
+    "title": "Test task from Git Bash",
+    "comment": "",
+    "repeat": ""
+  }
+]

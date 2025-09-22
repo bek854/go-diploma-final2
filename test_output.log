@@ -1,0 +1,140 @@
+=== RUN   TestAddTask
+    addtask_4_test.go:102: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:102
+        	Error:      	Received unexpected error:
+        	            	invalid character 'Ð' looking for beginning of value
+        	Test:       	TestAddTask
+    addtask_4_test.go:105: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:105
+        	Error:      	Should be false
+        	Test:       	TestAddTask
+        	Messages:   	Ожидается ошибка для задачи {20240129   }
+    addtask_4_test.go:102: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:102
+        	Error:      	Received unexpected error:
+        	            	invalid character 'Ð' looking for beginning of value
+        	Test:       	TestAddTask
+    addtask_4_test.go:105: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:105
+        	Error:      	Should be false
+        	Test:       	TestAddTask
+        	Messages:   	Ожидается ошибка для задачи {20240192 Qwerty  }
+    addtask_4_test.go:102: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:102
+        	Error:      	Received unexpected error:
+        	            	invalid character 'Ð' looking for beginning of value
+        	Test:       	TestAddTask
+    addtask_4_test.go:105: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:105
+        	Error:      	Should be false
+        	Test:       	TestAddTask
+        	Messages:   	Ожидается ошибка для задачи {28.01.2024 Заголовок  }
+    addtask_4_test.go:102: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:102
+        	Error:      	Received unexpected error:
+        	            	invalid character 'Ð' looking for beginning of value
+        	Test:       	TestAddTask
+    addtask_4_test.go:105: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:105
+        	Error:      	Should be false
+        	Test:       	TestAddTask
+        	Messages:   	Ожидается ошибка для задачи {20240112 Заголовок  w}
+    addtask_4_test.go:102: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:102
+        	Error:      	Received unexpected error:
+        	            	invalid character 'Ð' looking for beginning of value
+        	Test:       	TestAddTask
+    addtask_4_test.go:105: 
+        	Error Trace:	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:105
+        	Error:      	Should be false
+        	Test:       	TestAddTask
+        	Messages:   	Ожидается ошибка для задачи {20240212 Заголовок  ooops}
+panic: test timed out after 10m0s
+	running tests:
+		TestAddTask (10m0s)
+
+goroutine 13 [running]:
+testing.(*M).startAlarm.func1()
+	C:/Program Files/Go/src/testing/testing.go:2373 +0x385
+created by time.goFunc
+	C:/Program Files/Go/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0xc0001329c0, {0x101f609?, 0x7ffcf06f3fb0?}, 0x105f8e8)
+	C:/Program Files/Go/src/testing/testing.go:1751 +0x392
+testing.runTests.func1(0xc0001329c0)
+	C:/Program Files/Go/src/testing/testing.go:2168 +0x37
+testing.tRunner(0xc0001329c0, 0xc00012dc70)
+	C:/Program Files/Go/src/testing/testing.go:1690 +0xcb
+testing.runTests(0xc000008138, {0x1446880, 0x9, 0x9}, {0xadf9f0?, 0xadf65a?, 0x144d780?})
+	C:/Program Files/Go/src/testing/testing.go:2166 +0x43d
+testing.(*M).Run(0xc0000794a0)
+	C:/Program Files/Go/src/testing/testing.go:2034 +0x64a
+main.main()
+	_testmain.go:61 +0x9b
+
+goroutine 7 [select]:
+net/http.(*persistConn).roundTrip(0xc000124c60, 0xc000076780)
+	C:/Program Files/Go/src/net/http/transport.go:2755 +0x7b0
+net/http.(*Transport).roundTrip(0x1446f00, 0xc00007d040)
+	C:/Program Files/Go/src/net/http/transport.go:644 +0xb91
+net/http.(*Transport).RoundTrip(0x80?, 0x10ead40?)
+	C:/Program Files/Go/src/net/http/roundtrip.go:30 +0x13
+net/http.send(0xc00007d040, {0x10ead40, 0x1446f00}, {0xc000033501?, 0xa82a73?, 0x0?})
+	C:/Program Files/Go/src/net/http/client.go:259 +0x5e4
+net/http.(*Client).send(0xc000170570, 0xc00007d040, {0xc000018f55?, 0xc000033670?, 0x0?})
+	C:/Program Files/Go/src/net/http/client.go:180 +0x98
+net/http.(*Client).do(0xc000170570, 0xc00007d040)
+	C:/Program Files/Go/src/net/http/client.go:725 +0x8bc
+net/http.(*Client).Do(...)
+	C:/Program Files/Go/src/net/http/client.go:590
+go_final_project/tests.requestJSON({0x101e1c0?, 0x8?}, 0xadbe45?, {0x101d2b6, 0x4})
+	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:52 +0x38d
+go_final_project/tests.postJSON({0x101e1c0, 0x8}, 0xc0001704e0, {0x101d2b6, 0x4})
+	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:69 +0x5a
+go_final_project/tests.TestAddTask.func1()
+	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:117 +0x34f
+go_final_project/tests.TestAddTask(0xc000132b60)
+	C:/Users/bekzan/go-diploma-final2/tests/addtask_4_test.go:164 +0x50d
+testing.tRunner(0xc000132b60, 0x105f8e8)
+	C:/Program Files/Go/src/testing/testing.go:1690 +0xcb
+created by testing.(*T).Run in goroutine 1
+	C:/Program Files/Go/src/testing/testing.go:1743 +0x377
+
+goroutine 8 [select]:
+database/sql.(*DB).connectionOpener(0xc00002d450, {0x10ed2c8, 0xc000076370})
+	C:/Program Files/Go/src/database/sql/sql.go:1253 +0x87
+created by database/sql.OpenDB in goroutine 7
+	C:/Program Files/Go/src/database/sql/sql.go:833 +0x130
+
+goroutine 18 [IO wait]:
+internal/poll.runtime_pollWait(0x23d20254e38, 0x72)
+	C:/Program Files/Go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x23d5ab9bb48?, 0x30?, 0x0)
+	C:/Program Files/Go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.execIO(0xc000192020, 0x105ffa8)
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:177 +0x105
+internal/poll.(*FD).Read(0xc000192008, {0xc00019a000, 0x1000, 0x1000})
+	C:/Program Files/Go/src/internal/poll/fd_windows.go:438 +0x2a7
+net.(*netFD).Read(0xc000192008, {0xc00019a000?, 0xc000059dc0?, 0x10ea520?})
+	C:/Program Files/Go/src/net/fd_posix.go:55 +0x25
+net.(*conn).Read(0xc000188008, {0xc00019a000?, 0x0?, 0x0?})
+	C:/Program Files/Go/src/net/net.go:189 +0x45
+net/http.(*persistConn).Read(0xc000124c60, {0xc00019a000?, 0xd45ac5?, 0xfb8900?})
+	C:/Program Files/Go/src/net/http/transport.go:2052 +0x4a
+bufio.(*Reader).fill(0xc0001820c0)
+	C:/Program Files/Go/src/bufio/bufio.go:110 +0x103
+bufio.(*Reader).Peek(0xc0001820c0, 0x1)
+	C:/Program Files/Go/src/bufio/bufio.go:148 +0x53
+net/http.(*persistConn).readLoop(0xc000124c60)
+	C:/Program Files/Go/src/net/http/transport.go:2205 +0x185
+created by net/http.(*Transport).dialConn in goroutine 9
+	C:/Program Files/Go/src/net/http/transport.go:1874 +0x154f
+
+goroutine 19 [select]:
+net/http.(*persistConn).writeLoop(0xc000124c60)
+	C:/Program Files/Go/src/net/http/transport.go:2519 +0xe7
+created by net/http.(*Transport).dialConn in goroutine 9
+	C:/Program Files/Go/src/net/http/transport.go:1875 +0x15a5
+FAIL	go_final_project/tests	600.294s
+FAIL
