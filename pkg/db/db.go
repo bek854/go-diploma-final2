@@ -1,10 +1,9 @@
 package db
 
 import (
-	"encoding/json"
+	"database/sql"
 	"fmt"
-	"os"
-	"sync"
+	_ "modernc.org/sqlite"
 )
 
 type Task struct {
@@ -15,156 +14,201 @@ type Task struct {
 	Repeat  string `json:"repeat"`
 }
 
-var (
-	tasks     []*Task
-	tasksMu   sync.Mutex
-	nextID    int = 1
-	taskFile     = "tasks.json"
-)
+type Database struct {
+	db *sql.DB
+}
 
-func Init(dbFile string) error {
-	tasks = []*Task{}
+var DB *Database
 
-	// Пытаемся загрузить задачи из файла, если он существует
-	if _, err := os.Stat(taskFile); err == nil {
-		data, err := os.ReadFile(taskFile)
+func Init(dbFile string) (*Database, error) {
+	if dbFile == "" {
+		dbFile = "scheduler.db"
+	}
+
+	// Используем modernc.org/sqlite (pure Go)
+	db, err := sql.Open("sqlite", dbFile)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка открытия БД: %w", err)
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("ошибка подключения к БД: %w", err)
+	}
+
+	if err := createTables(db); err != nil {
+		return nil, fmt.Errorf("ошибка создания таблиц: %w", err)
+	}
+
+	database := &Database{db: db}
+	DB = database
+	return database, nil
+}
+
+func createTables(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        title TEXT NOT NULL,
+        comment TEXT,
+        repeat TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    `
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("ошибка создания таблицы tasks: %w", err)
+	}
+	return nil
+}
+
+func (d *Database) AddTask(task *Task) (int64, error) {
+	query := `INSERT INTO tasks (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
+	result, err := d.db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка добавления задачи: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("ошибка получения ID: %w", err)
+	}
+
+	return id, nil
+}
+
+func (d *Database) GetTasks(limit int) ([]*Task, error) {
+	var query string
+	if limit > 0 {
+		query = "SELECT id, date, title, comment, repeat FROM tasks ORDER BY date LIMIT ?"
+	} else {
+		query = "SELECT id, date, title, comment, repeat FROM tasks ORDER BY date"
+	}
+
+	var rows *sql.Rows
+	var err error
+
+	if limit > 0 {
+		rows, err = d.db.Query(query, limit)
+	} else {
+		rows, err = d.db.Query(query)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения задач: %w", err)
+	}
+	defer rows.Close()
+
+	var tasks []*Task
+	for rows.Next() {
+		var task Task
+		var id int
+		err := rows.Scan(&id, &task.Date, &task.Title, &task.Comment, &task.Repeat)
 		if err != nil {
-			return fmt.Errorf("ошибка чтения файла задач: %v", err)
+			return nil, fmt.Errorf("ошибка сканирования задачи: %w", err)
 		}
+		task.ID = fmt.Sprintf("%d", id)
+		tasks = append(tasks, &task)
+	}
 
-		if len(data) > 0 {
-			err = json.Unmarshal(data, &tasks)
-			if err != nil {
-				return fmt.Errorf("ошибка парсинга задач: %v", err)
-			}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка итерации по задачам: %w", err)
+	}
 
-			// Находим максимальный ID
-			maxID := 0
-			for _, task := range tasks {
-				if id := atoi(task.ID); id > maxID {
-					maxID = id
-				}
-			}
-			nextID = maxID + 1
-		}
+	return tasks, nil
+}
+
+func (d *Database) GetTask(id string) (*Task, error) {
+	query := "SELECT id, date, title, comment, repeat FROM tasks WHERE id = ?"
+	row := d.db.QueryRow(query, id)
+
+	var task Task
+	var taskID int
+	err := row.Scan(&taskID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
+	if err != nil {
+		return nil, fmt.Errorf("задача не найдена")
+	}
+
+	task.ID = fmt.Sprintf("%d", taskID)
+	return &task, nil
+}
+
+func (d *Database) UpdateTask(task *Task) error {
+	query := "UPDATE tasks SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?"
+	result, err := d.db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	if err != nil {
+		return fmt.Errorf("ошибка обновления задачи: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("ошибка проверки обновления: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("задача не найдена")
 	}
 
 	return nil
 }
 
-func saveTasks() error {
-	data, err := json.MarshalIndent(tasks, "", "  ")
+func (d *Database) DeleteTask(id string) error {
+	query := "DELETE FROM tasks WHERE id = ?"
+	result, err := d.db.Exec(query, id)
 	if err != nil {
-		return fmt.Errorf("ошибка сериализации задач: %v", err)
+		return fmt.Errorf("ошибка удаления задачи: %w", err)
 	}
 
-	err = os.WriteFile(taskFile, data, 0644)
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("ошибка записи задач: %v", err)
+		return fmt.Errorf("ошибка проверки удаления: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("задача не найдена")
 	}
 
 	return nil
 }
 
-func atoi(s string) int {
-	var n int
-	for _, ch := range s {
-		if ch >= '0' && ch <= '9' {
-			n = n*10 + int(ch-'0')
-		}
-	}
-	return n
-}
-
-func AddTask(task *Task) (int64, error) {
-	tasksMu.Lock()
-	defer tasksMu.Unlock()
-
-	task.ID = fmt.Sprintf("%d", nextID)
-	nextID++
-	tasks = append(tasks, task)
-
-	err := saveTasks()
+func (d *Database) UpdateTaskDate(id, date string) error {
+	query := "UPDATE tasks SET date = ? WHERE id = ?"
+	result, err := d.db.Exec(query, date, id)
 	if err != nil {
-		// Откатываем изменения при ошибке
-		tasks = tasks[:len(tasks)-1]
-		nextID--
-		return 0, err
+		return fmt.Errorf("ошибка обновления даты задачи: %w", err)
 	}
 
-	return int64(atoi(task.ID)), nil
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("ошибка проверки обновления: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("задача не найдена")
+	}
+
+	return nil
 }
 
-func GetTasks(limit int) ([]*Task, error) {
-	tasksMu.Lock()
-	defer tasksMu.Unlock()
-
-	// Если задач нет, возвращаем пустой слайс
-	if len(tasks) == 0 {
-		return []*Task{}, nil
-	}
-
-	if limit <= 0 || limit > len(tasks) {
-		limit = len(tasks)
-	}
-
-	result := make([]*Task, limit)
-	copy(result, tasks[:limit])
-
-	return result, nil
+// CreateTask - алиас для AddTask
+func (d *Database) CreateTask(task *Task) (int64, error) {
+	return d.AddTask(task)
 }
 
-func GetTask(id string) (*Task, error) {
-	tasksMu.Lock()
-	defer tasksMu.Unlock()
-
-	for _, task := range tasks {
-		if task.ID == id {
-			return task, nil
-		}
-	}
-
-	return nil, fmt.Errorf("задача не найдена")
+// GetAllTasks - алиас для GetTasks
+func (d *Database) GetAllTasks() ([]*Task, error) {
+	return d.GetTasks(0)
 }
 
-func UpdateTask(updatedTask *Task) error {
-	tasksMu.Lock()
-	defer tasksMu.Unlock()
-
-	for i, task := range tasks {
-		if task.ID == updatedTask.ID {
-			tasks[i] = updatedTask
-			return saveTasks()
-		}
-	}
-
-	return fmt.Errorf("задача не найдена")
+// GetTaskByID - алиас для GetTask
+func (d *Database) GetTaskByID(id string) (*Task, error) {
+	return d.GetTask(id)
 }
 
-func DeleteTask(id string) error {
-	tasksMu.Lock()
-	defer tasksMu.Unlock()
-
-	for i, task := range tasks {
-		if task.ID == id {
-			tasks = append(tasks[:i], tasks[i+1:]...)
-			return saveTasks()
-		}
+// Close - закрытие соединения
+func (d *Database) Close() error {
+	if d.db != nil {
+		return d.db.Close()
 	}
-
-	return fmt.Errorf("задача не найдена")
-}
-
-func UpdateTaskDate(id, date string) error {
-	tasksMu.Lock()
-	defer tasksMu.Unlock()
-
-	for _, task := range tasks {
-		if task.ID == id {
-			task.Date = date
-			return saveTasks()
-		}
-	}
-
-	return fmt.Errorf("задача не найдена")
+	return nil
 }

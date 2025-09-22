@@ -28,11 +28,11 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		http.Error(w, "Не указан ID задачи", http.StatusBadRequest)
+		http.Error(w, "Не указан идентификатор задачи", http.StatusBadRequest)
 		return
 	}
 
-	task, err := db.GetTask(id)
+	task, err := database.GetTask(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -44,30 +44,27 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Получен запрос на добавление задачи")
-	
+
 	var task db.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		log.Printf("Ошибка разбора JSON: %v", err)
-		http.Error(w, "Ошибка разбора JSON", http.StatusBadRequest)
+		log.Printf("Ошибка при разборе JSON: %v", err)
+		http.Error(w, "Ошибка при разборе JSON", http.StatusBadRequest)
 		return
 	}
 
 	log.Printf("Получена задача: %+v", task)
 
-	// Проверяем обязательное поле
 	if task.Title == "" {
 		log.Println("Заголовок задачи не указан")
-		http.Error(w, "Не указан заголовок задачи", http.StatusBadRequest)
+		http.Error(w, "Заголовок задачи не указан", http.StatusBadRequest)
 		return
 	}
 
-	// Устанавливаем дату по умолчанию если не указана
 	now := time.Now()
 	if task.Date == "" {
 		task.Date = now.Format(dateFormat)
 	} else {
-		// Проверяем формат даты
 		_, err := time.Parse(dateFormat, task.Date)
 		if err != nil {
 			log.Printf("Неверный формат даты: %s", task.Date)
@@ -76,29 +73,26 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Если дата в прошлом и есть правило повторения, вычисляем следующую дату
-	taskTime, _ := time.Parse(dateFormat, task.Date)
-	if taskTime.Before(now) && task.Repeat != "" {
+	taskDate, _ := time.Parse(dateFormat, task.Date)
+	if taskDate.Before(now) && task.Repeat != "" {
 		nextDate, err := NextDate(now, task.Date, task.Repeat)
 		if err != nil {
-			log.Printf("Ошибка вычисления следующей даты: %v", err)
+			log.Printf("Ошибка при вычислении следующей даты: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		task.Date = nextDate
 	}
 
-	// Добавляем задачу в БД
-	id, err := db.AddTask(&task)
+	id, err := database.AddTask(&task)
 	if err != nil {
-		log.Printf("Ошибка добавления задачи в БД: %v", err)
+		log.Printf("Ошибка при добавлении задачи в БД: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("Задача добавлена с ID: %d", id)
+	log.Printf("Задача добавлена с идентификатором: %d", id)
 
-	// Возвращаем ID созданной задачи
 	response := map[string]interface{}{"id": fmt.Sprintf("%d", id)}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(response)
@@ -108,21 +102,19 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		http.Error(w, "Ошибка разбора JSON", http.StatusBadRequest)
+		http.Error(w, "Ошибка при разборе JSON", http.StatusBadRequest)
 		return
 	}
 
-	// Проверяем обязательные поля
 	if task.ID == "" {
-		http.Error(w, "Не указан ID задачи", http.StatusBadRequest)
+		http.Error(w, "Не указан идентификатор задачи", http.StatusBadRequest)
 		return
 	}
 	if task.Title == "" {
-		http.Error(w, "Не указан заголовок задачи", http.StatusBadRequest)
+		http.Error(w, "Заголовок задачи не указан", http.StatusBadRequest)
 		return
 	}
 
-	// Проверяем формат даты если указана
 	if task.Date != "" {
 		_, err := time.Parse(dateFormat, task.Date)
 		if err != nil {
@@ -131,14 +123,12 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Обновляем задачу в БД
-	err = db.UpdateTask(&task)
+	err = database.UpdateTask(&task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Возвращаем успешный ответ
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(map[string]interface{}{})
 }
@@ -146,17 +136,16 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		http.Error(w, "Не указан ID задачи", http.StatusBadRequest)
+		http.Error(w, "Не указан идентификатор задачи", http.StatusBadRequest)
 		return
 	}
 
-	err := db.DeleteTask(id)
+	err := database.DeleteTask(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Возвращаем успешный ответ
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(map[string]interface{}{})
 }

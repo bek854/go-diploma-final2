@@ -15,17 +15,23 @@ func main() {
 	if dbFile == "" {
 		dbFile = "scheduler.db"
 	}
-	
-	err := db.Init(dbFile)
+
+	database, err := db.Init(dbFile)
 	if err != nil {
 		log.Fatalf("Ошибка инициализации БД: %v", err)
 	}
 
-	// Инициализация API обработчиков
+	// Сохраняем ссылку на БД в api пакете
+	api.SetDB(database)
+
+	// Инициализация обработчиков API
 	api.Init()
 
-	// Жёстко задаем порт 9092
+	// Порт
 	port := "8082"
+	if envPort := os.Getenv("TODO_PORT"); envPort != "" {
+		port = envPort
+	}
 
 	// Запуск веб-сервера
 	log.Printf("Сервер запущен на порту %s", port)

@@ -4,9 +4,9 @@ services:
   todo-app:
     build: .
     ports:
-      - "9092:9092"
+      - "8082:8082"
     environment:
-      - TODO_PORT=9092
+      - TODO_PORT=8082
       - TODO_PASSWORD=secret123
     volumes:
       - todo-data:/data

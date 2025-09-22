@@ -8,17 +8,16 @@ import (
 	"time"
 )
 
-const dateFormat = "20060102"
+const dateFormat = "02.01.2006"
 
 func NextDate(now time.Time, date string, repeat string) (string, error) {
 	if repeat == "" {
 		return "", fmt.Errorf("правило повторения не может быть пустым")
 	}
 
-	// Парсим исходную дату
 	t, err := time.Parse(dateFormat, date)
 	if err != nil {
-		return "", fmt.Errorf("неверный формат даты")
+		return "", fmt.Errorf("неверный формат даты: %w", err)
 	}
 
 	parts := strings.Fields(repeat)
@@ -34,14 +33,13 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 
 		days, err := strconv.Atoi(parts[1])
 		if err != nil {
-			return "", fmt.Errorf("неверный интервал для ежедневного повторения")
+			return "", fmt.Errorf("неверный интервал для ежедневного повторения: %w", err)
 		}
 
 		if days < 1 || days > 400 {
-			return "", fmt.Errorf("интервал должен быть от 1 до 400 дней")
+			return "", fmt.Errorf("интервал должен составлять от 1 до 400 дней")
 		}
 
-		// Добавляем дни пока не получим дату больше текущей
 		for {
 			t = t.AddDate(0, 0, days)
 			if t.After(now) {
@@ -52,7 +50,6 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 		return t.Format(dateFormat), nil
 
 	case "y":
-		// Ежегодное повторение
 		for {
 			t = t.AddDate(1, 0, 0)
 			if t.After(now) {
@@ -72,12 +69,10 @@ func nextDateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем параметры из запроса
 	nowStr := r.FormValue("now")
 	date := r.FormValue("date")
 	repeat := r.FormValue("repeat")
 
-	// Если now не указан, используем текущее время
 	var now time.Time
 	if nowStr == "" {
 		now = time.Now()
@@ -90,14 +85,12 @@ func nextDateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Вычисляем следующую дату
 	nextDate, err := NextDate(now, date, repeat)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Возвращаем результат
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(nextDate))
 }
